@@ -1,4 +1,4 @@
-name: 📦 编译发布（含 SLSA Attestation）  # v2
+name: 📦 编译发布（含 SLSA Attestation）  # v3
 
 on:
   push:
@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write      # 创建 Release
-  id-token: write      # SLSA Attestation 必须
-  attestations: write  # 写入构建证明
+  contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build-and-release:
@@ -29,36 +29,50 @@ jobs:
       - name: 🤖 设置 Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: 🔧 设置 Gradle 8.4
+      - name: 🔧 安装 Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.4'
+          gradle-version: '8.7'
 
-      - name: 🔨 编译 Android APK
+      - name: 🔍 调试环境
         run: |
-          # 写入 local.properties 让 Gradle 找到 SDK
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          gradle --version
+          ls $ANDROID_SDK_ROOT/platforms/ 2>/dev/null || echo "No platforms dir"
+
+      - name: 🔨 生成 Wrapper 并编译 APK
+        run: |
+          # 生成 gradle-wrapper.jar（用已安装的 gradle）
+          gradle wrapper --gradle-version 8.7 --distribution-type bin
+          chmod +x gradlew
+
+          # 写入 SDK 路径
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "local.properties 内容:"
           cat local.properties
-          gradle assembleDebug --no-daemon
+
+          # 接受 SDK 协议
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+
+          # 编译
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
         env:
-          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
 
       - name: 📱 重命名 APK
-        run: |
-          cp app/build/outputs/apk/debug/app-debug.apk \
-             YouTube登记助手-Android.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk YouTube登记助手-Android.apk
 
       - name: 💻 打包 Chrome 扩展
         run: |
           cd ChromeExtension
-          zip -r ../YouTube登记助手-Chrome插件.zip . \
-            --exclude "*.git*" --exclude "__MACOSX*"
+          zip -r ../YouTube登记助手-Chrome插件.zip . --exclude "*.git*"
 
       - name: 🍎 准备 iOS 文件
         run: cp mobile.html YouTube登记助手-iOS.html
 
-      # ── SLSA Attestation（每个产物单独签名）──────────────
       - name: 🔏 Attest Android APK
         uses: actions/attest-build-provenance@v2
         with:
@@ -74,7 +88,6 @@ jobs:
         with:
           subject-path: YouTube登记助手-iOS.html
 
-      # ── 发布 Release ─────────────────────────────────────
       - name: 🚀 发布到 GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
@@ -85,27 +98,12 @@ jobs:
 
             | 文件 | 平台 | 说明 |
             |------|------|------|
-            | `YouTube登记助手-Android.apk` | 🤖 Android | 悬浮窗 App，可叠加在 YouTube 上方 |
-            | `YouTube登记助手-Chrome插件.zip` | 💻 电脑 Chrome | 解压后在 `chrome://extensions` 加载 |
-            | `YouTube登记助手-iOS.html` | 🍎 iOS / 手机 | Safari 打开后「添加到主屏幕」 |
+            | `YouTube登记助手-Android.apk` | 🤖 Android | 悬浮窗 App |
+            | `YouTube登记助手-Chrome插件.zip` | 💻 电脑 Chrome | 解压后在 chrome://extensions 加载 |
+            | `YouTube登记助手-iOS.html` | 🍎 iOS / 手机 | Safari 打开后添加到主屏幕 |
 
-            ## 🔏 构建证明（SLSA Provenance）
-            所有产物均由 GitHub Actions 自动构建，并附有 SLSA v1.0 构建证明，可通过 GitHub Attestation API 验证。
-
-            ## 📖 安装说明
-
-            ### 💻 电脑版（Chrome 扩展）
-            1. 下载并解压 `YouTube登记助手-Chrome插件.zip`
-            2. 打开 `chrome://extensions` → 开启右上角「开发者模式」
-            3. 点「加载已解压的扩展程序」→ 选择解压后的文件夹
-
-            ### 🤖 Android 版
-            1. 下载 APK → 安装（需允许「安装未知来源应用」）
-            2. 打开 App → 授权悬浮窗 → 填写 Google Apps Script URL → 启动
-
-            ### 🍎 iOS 版
-            1. 下载 `YouTube登记助手-iOS.html`，用 Safari 打开
-            2. 点底部「分享」→「添加到主屏幕」
+            ## 🔏 SLSA 构建证明
+            所有产物均由 GitHub Actions 自动构建，附有 SLSA v1.0 构建证明。
 
           files: |
             YouTube登记助手-Android.apk
