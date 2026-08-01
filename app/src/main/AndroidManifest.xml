@@ -4,7 +4,10 @@
     <!-- 核心权限 -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- FOREGROUND_SERVICE_SPECIAL_USE 仅 Android 14+ 需要，用 maxSdkVersion 限制 -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        android:minSdkVersion="34" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -25,14 +28,14 @@
             </intent-filter>
         </activity>
 
-        <!-- 悬浮窗后台服务 -->
+        <!-- 悬浮窗后台服务
+             Android 10+（API 29）才支持 foregroundServiceType，
+             Android 14（API 34）才支持 specialUse，
+             <property> 仅 Android 12+（API 31）支持，
+             全部用 tools:ignore 保持向下兼容，运行时无影响 -->
         <service
             android:name=".FloatingService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="overlay" />
+            android:exported="false">
         </service>
 
         <!-- 开机自启接收器 -->
