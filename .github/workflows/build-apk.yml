@@ -1,17 +1,20 @@
-name: 📦 自动编译并发布三端
+name: 📦 编译发布（含 SLSA Attestation）
 
 on:
   push:
-    branches: [ main ]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write      # 创建 Release
+  id-token: write      # SLSA Attestation 必须
+  attestations: write  # 写入构建证明
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    name: 编译 Android + 打包 Chrome + 发布 Release
+    name: 编译 + Attest + 发布 Release
 
     steps:
       - name: 📥 拉取代码
@@ -26,8 +29,7 @@ jobs:
       - name: 🤖 设置 Android SDK
         uses: android-actions/setup-android@v3
 
-      # 使用 Gradle 官方 Action，不依赖 gradle-wrapper.jar
-      - name: 🔧 设置 Gradle
+      - name: 🔧 设置 Gradle 8.4
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.4'
@@ -51,17 +53,28 @@ jobs:
       - name: 🍎 准备 iOS 文件
         run: cp mobile.html YouTube登记助手-iOS.html
 
-      - name: 🏷️ 生成版本号
-        id: version
-        run: |
-          TAG="v$(date +'%Y.%m.%d-%H%M')"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      # ── SLSA Attestation（每个产物单独签名）──────────────
+      - name: 🔏 Attest Android APK
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: YouTube登记助手-Android.apk
 
+      - name: 🔏 Attest Chrome 插件
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: YouTube登记助手-Chrome插件.zip
+
+      - name: 🔏 Attest iOS 文件
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: YouTube登记助手-iOS.html
+
+      # ── 发布 Release ─────────────────────────────────────
       - name: 🚀 发布到 GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: "YouTube 登记助手 ${{ steps.version.outputs.tag }}"
+          tag_name: ${{ github.ref_name }}
+          name: "YouTube 登记助手 ${{ github.ref_name }}"
           body: |
             ## 📦 三端下载
 
@@ -70,6 +83,9 @@ jobs:
             | `YouTube登记助手-Android.apk` | 🤖 Android | 悬浮窗 App，可叠加在 YouTube 上方 |
             | `YouTube登记助手-Chrome插件.zip` | 💻 电脑 Chrome | 解压后在 `chrome://extensions` 加载 |
             | `YouTube登记助手-iOS.html` | 🍎 iOS / 手机 | Safari 打开后「添加到主屏幕」 |
+
+            ## 🔏 构建证明（SLSA Provenance）
+            所有产物均由 GitHub Actions 自动构建，并附有 SLSA v1.0 构建证明，可通过 GitHub Attestation API 验证。
 
             ## 📖 安装说明
 
@@ -81,7 +97,6 @@ jobs:
             ### 🤖 Android 版
             1. 下载 APK → 安装（需允许「安装未知来源应用」）
             2. 打开 App → 授权悬浮窗 → 填写 Google Apps Script URL → 启动
-            3. 按 Home 键，屏幕边角出现 📹 悬浮按钮 → 点击即可登记
 
             ### 🍎 iOS 版
             1. 下载 `YouTube登记助手-iOS.html`，用 Safari 打开
