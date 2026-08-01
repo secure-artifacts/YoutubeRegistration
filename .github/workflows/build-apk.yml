@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write   # 创建 Release 需要写权限
+  contents: write
 
 jobs:
   build-and-release:
@@ -14,54 +14,49 @@ jobs:
     name: 编译 Android + 打包 Chrome + 发布 Release
 
     steps:
-      # ── 1. 拉取代码 ──────────────────────────────────────────
       - name: 📥 拉取代码
         uses: actions/checkout@v4
 
-      # ── 2. Java 环境 ─────────────────────────────────────────
       - name: ☕ 设置 Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # ── 3. Android SDK ───────────────────────────────────────
       - name: 🤖 设置 Android SDK
         uses: android-actions/setup-android@v3
 
-      # ── 4. 编译 Android APK ──────────────────────────────────
-      - name: 🔨 编译 Android APK
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+      # 使用 Gradle 官方 Action，不依赖 gradle-wrapper.jar
+      - name: 🔧 设置 Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.4'
 
-      # ── 5. 重命名 APK ────────────────────────────────────────
+      - name: 🔨 编译 Android APK
+        run: gradle assembleDebug --no-daemon
+        env:
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
       - name: 📱 重命名 APK
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk \
              YouTube登记助手-Android.apk
 
-      # ── 6. 打包 Chrome 扩展 ──────────────────────────────────
       - name: 💻 打包 Chrome 扩展
         run: |
           cd ChromeExtension
           zip -r ../YouTube登记助手-Chrome插件.zip . \
-            --exclude "*.git*" --exclude "__MACOSX*" --exclude "*.DS_Store"
+            --exclude "*.git*" --exclude "__MACOSX*"
 
-      # ── 7. 准备 iOS 文件 ─────────────────────────────────────
       - name: 🍎 准备 iOS 文件
-        run: |
-          cp mobile.html YouTube登记助手-iOS.html
+        run: cp mobile.html YouTube登记助手-iOS.html
 
-      # ── 8. 生成版本号 ────────────────────────────────────────
       - name: 🏷️ 生成版本号
         id: version
         run: |
           TAG="v$(date +'%Y.%m.%d-%H%M')"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "生成版本号: $TAG"
 
-      # ── 9. 创建 GitHub Release 并上传三端文件 ────────────────
       - name: 🚀 发布到 GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
@@ -91,7 +86,6 @@ jobs:
             ### 🍎 iOS 版
             1. 下载 `YouTube登记助手-iOS.html`，用 Safari 打开
             2. 点底部「分享」→「添加到主屏幕」
-            3. 在 YouTube 里复制链接 → 切换到此 App → 粘贴登记
 
           files: |
             YouTube登记助手-Android.apk
@@ -100,9 +94,3 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── 10. 输出 Release 链接 ───────────────────────────────
-      - name: 🔗 输出下载链接
-        run: |
-          echo "✅ Release 已发布！"
-          echo "🔗 下载地址: https://github.com/${{ github.repository }}/releases/latest"
