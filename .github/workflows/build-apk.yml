@@ -1,4 +1,4 @@
-name: 📦 编译发布（含 SLSA Attestation）  # v3
+name: 📦 编译发布（含 SLSA Attestation）  # v4
 
 on:
   push:
@@ -26,39 +26,50 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 🤖 设置 Android SDK
-        uses: android-actions/setup-android@v3
+      # 手动安装 Android SDK，不依赖第三方 Action
+      - name: 🤖 安装 Android SDK 完整组件
+        run: |
+          # 下载 Android 命令行工具
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          curl -s https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdtools.zip
+          unzip -q cmdtools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+
+          # 接受所有协议并安装必需组件
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+          # 写入环境变量供后续步骤使用
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+          echo "✅ Android SDK 安装完成"
+          ls $HOME/android-sdk/platforms/
 
       - name: 🔧 安装 Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: 🔍 调试环境
+      - name: 🔨 编译 Android APK
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "--- 环境检查 ---"
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           echo "JAVA_HOME=$JAVA_HOME"
-          java -version
           gradle --version
-          ls $ANDROID_SDK_ROOT/platforms/ 2>/dev/null || echo "No platforms dir"
-
-      - name: 🔨 生成 Wrapper 并编译 APK
-        run: |
-          # 生成 gradle-wrapper.jar（用已安装的 gradle）
-          gradle wrapper --gradle-version 8.7 --distribution-type bin
-          chmod +x gradlew
+          ls $ANDROID_SDK_ROOT/platforms/
 
           # 写入 SDK 路径
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          echo "local.properties 内容:"
-          cat local.properties
-
-          # 接受 SDK 协议
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+          echo "local.properties: $(cat local.properties)"
 
           # 编译
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1
+          gradle assembleDebug --no-daemon --stacktrace
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
 
@@ -98,8 +109,8 @@ jobs:
 
             | 文件 | 平台 | 说明 |
             |------|------|------|
-            | `YouTube登记助手-Android.apk` | 🤖 Android | 悬浮窗 App |
-            | `YouTube登记助手-Chrome插件.zip` | 💻 电脑 Chrome | 解压后在 chrome://extensions 加载 |
+            | `YouTube登记助手-Android.apk` | 🤖 Android | 悬浮窗 App，可叠加在 YouTube 上方 |
+            | `YouTube登记助手-Chrome插件.zip` | 💻 电脑 Chrome | 解压后在 `chrome://extensions` 加载 |
             | `YouTube登记助手-iOS.html` | 🍎 iOS / 手机 | Safari 打开后添加到主屏幕 |
 
             ## 🔏 SLSA 构建证明
