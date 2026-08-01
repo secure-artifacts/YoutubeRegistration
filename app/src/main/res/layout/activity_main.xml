@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A18">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Logo -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📹"
+            android:textSize="48sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="32dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YouTube 登记助手"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#93C5FD"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Android 悬浮窗版 v1.0"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- 分割线 -->
+        <View android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="#1F2937" android:layout_marginBottom="24dp"/>
+
+        <!-- 步骤1：权限 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="第一步：授权悬浮窗权限"
+            android:textColor="#A5B4FC"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:id="@+id/perm_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:layout_marginBottom="10dp"/>
+
+        <Button
+            android:id="@+id/permission_btn"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="🔐  授权悬浮窗（必须完成）"
+            android:backgroundTint="#1E3A5F"
+            android:textColor="#93C5FD"
+            android:textStyle="bold"
+            android:layout_marginBottom="28dp"/>
+
+        <!-- 步骤2：URL -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="第二步：填写 Google Apps Script URL"
+            android:textColor="#A5B4FC"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="10dp"/>
+
+        <EditText
+            android:id="@+id/url_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="粘贴 Apps Script 部署后的长网址"
+            android:textColor="#E5E7EB"
+            android:textColorHint="#4B5563"
+            android:background="@drawable/input_bg"
+            android:padding="14dp"
+            android:textSize="13sp"
+            android:inputType="textUri"
+            android:layout_marginBottom="28dp"/>
+
+        <!-- 步骤3：自启 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="开机自动启动"
+                    android:textColor="#E5E7EB"
+                    android:textSize="14sp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="手机重启后悬浮窗自动出现"
+                    android:textColor="#6B7280"
+                    android:textSize="11sp"/>
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/auto_start_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"/>
+        </LinearLayout>
+
+        <!-- 启动按钮 -->
+        <Button
+            android:id="@+id/start_btn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="▶  启动悬浮窗"
+            android:backgroundTint="#3B82F6"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- 停止按钮 -->
+        <Button
+            android:id="@+id/stop_btn"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="■  停止悬浮窗"
+            android:backgroundTint="#1F2937"
+            android:textColor="#9CA3AF"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- 使用说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💡 使用方法：\n1. 完成上方三个步骤\n2. 点击「启动悬浮窗」\n3. 按 Home 键回到主屏幕\n4. 打开 YouTube，屏幕边会出现 📹 按钮\n5. 点击按钮即可登记当前视频"
+            android:textColor="#6B7280"
+            android:textSize="12sp"
+            android:lineSpacingMultiplier="1.6"
+            android:background="@drawable/hint_bg"
+            android:padding="16dp"
+            android:layout_marginBottom="32dp"/>
+
+    </LinearLayout>
+</ScrollView>
