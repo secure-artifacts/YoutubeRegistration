@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { width: 320px; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f9f9f9; margin: 0; transition: background-color 0.3s; }
+    .field { margin-bottom: 12px; }
+    label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #444; }
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+    }
+    input[readonly] { background-color: #eee; color: #666; cursor: not-allowed; outline: none; }
+    textarea { resize: vertical; height: 60px; }
+    
+    button {
+      width: 100%; padding: 10px; background-color: #1a73e8; color: white;
+      border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold; transition: background-color 0.3s, transform 0.1s;
+    }
+    button:hover { filter: brightness(0.9); }
+    button:active { transform: scale(0.98); }
+    button:disabled { background-color: #a8c7fa !important; cursor: not-allowed; }
+    
+    .settings-box { background-color: rgba(0,0,0,0.05); padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px dashed #999; }
+    .btn-secondary { background-color: #5f6368; margin-top: 8px; padding: 6px; font-size: 13px; }
+    
+    .mode-switch { display: flex; justify-content: space-between; margin-bottom: 15px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .mode-switch label { flex: 1; text-align: center; margin: 0; padding: 10px 0; cursor: pointer; background: #f1f3f4; color: #5f6368; font-weight: bold; transition: 0.3s; font-size: 13px; }
+    .mode-switch input[type="radio"] { display: none; }
+    
+    #mode1:checked + label { background-color: #1a73e8; color: white; }
+    #mode2:checked + label { background-color: #0f9d58; color: white; }
+
+    #status, #urlStatus { margin-top: 8px; font-size: 13px; text-align: center; font-weight: bold; }
+    .success { color: #0f9d58; }
+    .error { color: #d93025; }
+    select { font-weight: bold; outline: none; }
+    
+    body.waiwen-mode { background-color: #e6f4ea; } 
+    body.waiwen-mode button#submitBtn { background-color: #0f9d58; } 
+    body.waiwen-mode .settings-box { border-color: #0f9d58; background-color: rgba(15,157,88,0.1); }
+
+    /* 登记状态标签的样式 */
+    .badge { float: right; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+    .badge.unregistered { background-color: #e6f4ea; color: #0f9d58; } /* 绿色表示未登记，可操作 */
+    .badge.registered { background-color: #fce8e6; color: #d93025; } /* 红色表示已登记，起警告作用 */
+
+    /* 双按钮行布局 */
+    .btn-row { display: flex; gap: 8px; }
+    .btn-row button { flex: 1; margin: 0; }
+    /* 修改备注按钮样式（橙黄色） */
+    #modifyBtn { background-color: #f9ab00; color: #202124; }
+  </style>
+</head>
+<body>
+  
+  <div class="mode-switch">
+    <input type="radio" id="mode1" name="workMode" value="视频打卡" checked>
+    <label for="mode1">🎬 视频打卡</label>
+    
+    <input type="radio" id="mode2" name="workMode" value="外文点击">
+    <label for="mode2">🌐 外文点击</label>
+  </div>
+
+  <div class="settings-box">
+    <label style="font-size: 11px; margin-bottom: 2px;">⚙️ 谷歌 Web App URL</label>
+    <input type="text" id="webAppUrl" placeholder="请粘贴部署后得到的长网址">
+    <button id="saveUrlBtn" class="btn-secondary">保存 URL</button>
+    <div id="urlStatus"></div>
+  </div>
+  
+  <div class="field">
+    <label>视频标题 <span id="regStatus" class="badge">检查中...</span></label>
+    <input type="text" id="title" readonly>
+  </div>
+  
+  <div class="field">
+    <label>视频链接</label>
+    <input type="text" id="url" readonly>
+  </div>
+
+  <!-- 视频时长（仅YouTube视频页面时显示） -->
+  <div class="field" id="durationField" style="display:none;">
+    <label>视频时长 <span id="durationBadge" class="badge"></span></label>
+    <input type="text" id="duration" readonly>
+  </div>
+  
+  <div id="dakaFields">
+    <div class="field">
+      <label>分类选项</label>
+      <select id="category">
+        <option value="朗诵视频" style="color: #e53935;">朗诵视频 (红色)</option>
+        <option value="生命经历" style="color: #fb8c00;">生命经历 (橙色)</option>
+        <option value="新时代报道" style="color: #1e88e5;">新时代报道 (蓝色)</option>
+        <option value="精彩片段" style="color: #43a047;">精彩片段 (绿色)</option>
+        <option value="电影" style="color: #8e24aa;">电影 (紫色)</option>
+        <option value="信仰求真" style="color: #00897b;">信仰求真 (青色)</option>
+        <option value="诗歌舞蹈" style="color: #d81b60;">诗歌舞蹈 (粉色)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>用户备注 (选填)</label>
+      <textarea id="note" placeholder="在此输入备注..."></textarea>
+    </div>
+  </div>
+
+  <div id="waiwenFields" style="display: none;">
+    <div class="field">
+      <label>手机点击数 (选填)</label>
+      <input type="number" id="mobileClicks" placeholder="请输入大于0的数字..." min="1">
+    </div>
+  </div>
+  
+  <div class="btn-row">
+    <button id="submitBtn">登记</button>
+    <button id="modifyBtn" style="display:none;">✏️ 修改备注</button>
+  </div>
+  <div id="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

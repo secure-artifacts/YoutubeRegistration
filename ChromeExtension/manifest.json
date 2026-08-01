@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube 视频登记助手",
+  "version": "1.0",
+  "description": "自动抓取当前YouTube视频信息并一键登记到谷歌表格。",
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*",
+    "https://www.youtube.com/*"
+  ]
+}
