@@ -1,4 +1,4 @@
-name: 📦 编译发布（含 SLSA Attestation）
+name: 📦 编译发布（含 SLSA Attestation）  # v2
 
 on:
   push:
@@ -35,9 +35,14 @@ jobs:
           gradle-version: '8.4'
 
       - name: 🔨 编译 Android APK
-        run: gradle assembleDebug --no-daemon
+        run: |
+          # 写入 local.properties 让 Gradle 找到 SDK
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          cat local.properties
+          gradle assembleDebug --no-daemon
         env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
 
       - name: 📱 重命名 APK
         run: |

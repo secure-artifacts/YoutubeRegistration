@@ -42,9 +42,13 @@ jobs:
           gradle-version: '8.4'
 
       - name: 编译（供 CodeQL 分析）
-        run: gradle assembleDebug --no-daemon
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          gradle assembleDebug --no-daemon
         env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+
 
       - name: 执行 CodeQL 分析
         uses: github/codeql-action/analyze@v3
